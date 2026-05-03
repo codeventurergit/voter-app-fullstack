@@ -1,4 +1,4 @@
-# voter-app-fullstackgi
+# voter-app-fullstack
 
 A full-stack data-driven application designed to analyze and manage voter registration data. This project showcases a modern serverless architecture built with Python and AWS.
 
