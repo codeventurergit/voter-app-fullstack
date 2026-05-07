@@ -1,46 +1,68 @@
 import json
 import boto3
 import os
+from decimal import Decimal
 from botocore.exceptions import ClientError
 
-# Initialize the DynamoDB client outside the handler for better performance
+# 1. Helper to handle DynamoDB numbers (Decimals)
+class DecimalEncoder(json.JSONEncoder):
+    def default(self, obj):
+        if isinstance(obj, Decimal):
+            # Convert to int if it's a whole number, else float
+            if obj % 1 == 0:
+                return int(obj)
+            return float(obj)
+        return super(DecimalEncoder, self).default(obj)
+
+# Initialize resource outside handler for better 'Warm Start' performance
 dynamodb = boto3.resource('dynamodb')
-# Use an environment variable for the table name (best practice for SAM/AWS)
-TABLE_NAME = os.environ.get('VOTER_TABLE', 'VoterData')
-table = dynamodb.Table(TABLE_NAME)
 
 def lambda_handler(event, context):
     """
-    Main Lambda entry point. 
-    Handles fetching voter data and returning it to your React frontend.
+    Optimized Lambda
+    Handles environment variables, Decimal serialization, and CORS.
     """
     print(f"Received event: {json.dumps(event)}")
     
+    # Get table name from environment variable injected by SAM
+    TABLE_NAME = os.environ.get('TABLE_NAME')
+    
+    if not TABLE_NAME:
+        return {
+            "statusCode": 500,
+            "body": json.dumps({"error": "Configuration error: TABLE_NAME not found in environment"})
+        }
+
+    table = dynamodb.Table(TABLE_NAME)
+    
     try:
-        # 1. Logic: Fetch all items from the VoterData table
-        # In a real app, you might add AI manipulation or SQL-like filtering here
+        # Fetch data from DynamoDB
         response = table.scan()
         items = response.get('Items', [])
 
-        # 2. Construct the successful response
+        # Construct response with headers
         return {
             "statusCode": 200,
             "headers": {
                 "Content-Type": "application/json",
-                "Access-Control-Allow-Origin": "*", # Required for React to talk to API
+                "Access-Control-Allow-Origin": "*",
                 "Access-Control-Allow-Methods": "GET,OPTIONS",
                 "Access-Control-Allow-Headers": "Content-Type"
             },
             "body": json.dumps({
                 "message": "Success",
                 "voter_count": len(items),
-                "data": items
-            })
+                "voters": items
+            }, cls=DecimalEncoder)
         }
 
-    except ClientError as e:
-        print(f"Error: {e.response['Error']['Message']}")
+    except Exception as e:
+        print(f"Unexpected Error: {str(e)}")
         return {
             "statusCode": 500,
-            "body": json.dumps({"error": "Could not retrieve voter data"})
+            "headers": {
+                "Content-Type": "application/json",
+                "Access-Control-Allow-Origin": "*"
+            },
+            "body": json.dumps({"error": f"Database error: {str(e)}"})
         }

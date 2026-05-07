@@ -1,40 +1,48 @@
-
 AWSTemplateFormatVersion: '2010-09-09'
 Transform: AWS::Serverless-2016-10-31
-Description: Voter Insights App - Backend
+Description: >
+  Voter App Backend - Serverless API with DynamoDB
+
+Globals:
+  Function:
+    Timeout: 10
+    MemorySize: 128
 
 Resources:
-  # 1. The DynamoDB Table
-  VoterTable:
+  # 1. The Database
+  VoterData:
     Type: AWS::Serverless::SimpleTable
     Properties:
       PrimaryKey:
-        Name: VoterId
+        Name: voter_id
         Type: String
-      TableName: VoterData
       SSESpecification:
-        SSEEnabled: true # Security: Encryption at rest
+        SSEEnabled: true
 
-  # 2. The Lambda Function
+  # 2. The Compute (Lambda)
   VoterInsightsFunction:
-    Type: AWS::Serverless::Function
+    Type: AWS::Serverless::Function 
     Properties:
       CodeUri: backend/voter_lambda/
       Handler: app.lambda_handler
       Runtime: python3.9
       Architectures:
         - x86_64
-      Policies:
-        - DynamoDBCrudPolicy: # Security: Only give permissions this function needs
-            TableName: !Ref VoterTable
+      # This connects the code to the specific table created above
+      Environment:
+        Variables:
+          TABLE_NAME: !Ref VoterData
       Events:
         GetVoters:
           Type: Api
           Properties:
             Path: /voters
             Method: get
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: !Ref VoterData
 
 Outputs:
-  VoterApi:
+  WebEndpoint:
     Description: "API Gateway endpoint URL for Prod stage"
     Value: !Sub "https://${ServerlessRestApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/voters/"
