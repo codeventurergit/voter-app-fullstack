@@ -1,6 +1,6 @@
 # voter-app-fullstack
 
-A full-stack data-driven application designed to analyze and manage voter registration data. This project showcases a modern serverless architecture built with Python and services are deployed to AWS using SAM Configuration as Code. The frontend demo link is hosted on Vercel.  The backend demo links are hosted on Render.
+A full-stack data-driven application designed to analyze and manage voter registration data. This project showcases a modern serverless architecture built with Python and services are deployed to AWS using SAM Infrastructure as Code. The frontend demo link is hosted on Vercel.  The backend demo links are hosted on Render.
 
 ## 🚀 Tech Stack
 - **Frontend:** React with TypeScript (Modern UI/UX)
@@ -34,7 +34,7 @@ Because this demo is hosted on a free-tier environment, the services may "sleep"
 *If the page takes ~30 seconds to load, the server is spinning up. Once you see the "API is live" message, the system is fully operational.*
 
 ### 2. Explore the Implementation
-*   **Interactive API Docs (Swagger):** https://voter-insights-backend.onrender.com//docs  
+*   **Interactive API Docs (Swagger):** https://voter-insights-backend.onrender.com/docs  
     *Use this to test the strategy engine directly. You can enter any Voter ID (e.g., `V-1001`) in the POST endpoint to see the logic generate a unique insight about a voter.*
 *   **Insights Dashboard:**  https://voter-app-fullstack-riyrdi046-codeventurergits-projects.vercel.app/
     *View the real-time visualization of voter demographics and interests.*
