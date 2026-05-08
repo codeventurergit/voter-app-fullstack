@@ -6,6 +6,15 @@ import httpx # Required if you plan to use the Ollama block
 # 1. Define the app variable that Render is looking for
 app = FastAPI()
 
+# Allow cross origin access:
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  
+    allow_credentials=True,
+    allow_methods=["*"],  
+    allow_headers=["*"],  
+)
+
 # 2. Add a basic root route so Render's health check passes immediately
 @app.get("/")
 async def root():
