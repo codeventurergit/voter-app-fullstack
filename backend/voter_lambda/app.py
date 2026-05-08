@@ -1,7 +1,8 @@
-import asyncio
 import random
-from fastapi import FastAPI # Missing Import
-import httpx # Required if you plan to use the Ollama block
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi import FastAPI
+import asyncio
+import httpx # Required for Ollama implementation
 
 # 1. Define the app variable that Render is looking for
 app = FastAPI()
