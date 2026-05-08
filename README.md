@@ -36,14 +36,7 @@ Because this demo is hosted on a free-tier environment, the services may "sleep"
 ### 2. Explore the Implementation
 *   **Interactive API Docs (Swagger):** https://voter-insights-backend.onrender.com/docs  
     *Use this to test the strategy engine directly. You can enter any Voter ID (e.g., `V-1001`) in the POST endpoint to see the logic generate a unique insight about a voter.*
-*   **Insights Dashboard:**  https://voter-app-fullstack-riyrdi046-codeventurergits-projects.vercel.app/
-    *View the real-time visualization of voter demographics and interests.*
-
-### 3. Data Resilience (Optional)
-If the dashboard appears empty, I have provided a utility endpoint to re-seed the live database:
-1. Navigate to the **Swagger UI** link above.
-2. Locate the `POST /dev/seed` endpoint.
-3. Click **"Try it out"** and then **"Execute"**. This will populate your session with 50 unique AWS DynamoDB records.
+*   **API Gateway Link:** - Retrieves five voters - https://u1mfkd0gxl.execute-api.us-east-1.amazonaws.com/Prod/voters/ 
 
 ## 🧠 Core Features & Design Patterns
 
