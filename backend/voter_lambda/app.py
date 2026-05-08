@@ -1,68 +1,53 @@
-import json
-import boto3
-import os
-from decimal import Decimal
-from botocore.exceptions import ClientError
+import httpx # You may need to run 'pip install httpx'
+import asyncio
+import random
 
-# 1. Helper to handle DynamoDB numbers (Decimals)
-class DecimalEncoder(json.JSONEncoder):
-    def default(self, obj):
-        if isinstance(obj, Decimal):
-            # Convert to int if it's a whole number, else float
-            if obj % 1 == 0:
-                return int(obj)
-            return float(obj)
-        return super(DecimalEncoder, self).default(obj)
-
-# Initialize resource outside handler for better 'Warm Start' performance
-dynamodb = boto3.resource('dynamodb')
-
-def lambda_handler(event, context):
+@app.post("/voters/{voter_id}/ai-strategy")
+async def get_ai_strategy(voter_id: str):
     """
-    Optimized Lambda
-    Handles environment variables, Decimal serialization, and CORS.
+    AI Strategy Endpoint
+    In a production or local environment with sufficient resources, 
+    this connects to an Ollama LLM instance (llama3) to generate 
+    bespoke voter outreach strategies.
     """
-    print(f"Received event: {json.dumps(event)}")
     
-    # Get table name from environment variable injected by SAM
-    TABLE_NAME = os.environ.get('TABLE_NAME')
+    # --- OLLAMA INTEGRATION (Production/Local Path) ---
+    # To use this in an environment with 16GB+ RAM:
+    # 1. Ensure Ollama is running (ollama serve)
+    # 2. Uncomment the block below and 'pip install httpx'
     
-    if not TABLE_NAME:
-        return {
-            "statusCode": 500,
-            "body": json.dumps({"error": "Configuration error: TABLE_NAME not found in environment"})
-        }
+    """
+    async with httpx.AsyncClient() as client:
+        try:
+            # 1. Fetch voter context from DynamoDB first (omitted for brevity)
+            # 2. Send prompt to Ollama API
+            response = await client.post(
+                "http://localhost:11434/api/generate",
+                json={
+                    "model": "llama3",
+                    "prompt": f"Generate a 2-sentence campaign strategy for voter {voter_id}",
+                    "stream": False
+                },
+                timeout=30.0
+            )
+            result = response.json()
+            return {"strategy": result['response'], "voter_id": voter_id}
+        except Exception as e:
+            # Fallback to Mock if AI service is unreachable
+            print(f"AI Service Error: {e}")
+    """
 
-    table = dynamodb.Table(TABLE_NAME)
+    # --- DEMO/SANDBOX PATH ---
+    # Simulated processing time to mirror LLM latency
+    await asyncio.sleep(1.2) 
     
-    try:
-        # Fetch data from DynamoDB
-        response = table.scan()
-        items = response.get('Items', [])
-
-        # Construct response with headers
-        return {
-            "statusCode": 200,
-            "headers": {
-                "Content-Type": "application/json",
-                "Access-Control-Allow-Origin": "*",
-                "Access-Control-Allow-Methods": "GET,OPTIONS",
-                "Access-Control-Allow-Headers": "Content-Type"
-            },
-            "body": json.dumps({
-                "message": "Success",
-                "voter_count": len(items),
-                "voters": items
-            }, cls=DecimalEncoder)
-        }
-
-    except Exception as e:
-        print(f"Unexpected Error: {str(e)}")
-        return {
-            "statusCode": 500,
-            "headers": {
-                "Content-Type": "application/json",
-                "Access-Control-Allow-Origin": "*"
-            },
-            "body": json.dumps({"error": f"Database error: {str(e)}"})
-        }
+    mock_responses = [
+        "Focus on community-driven infrastructure and job training programs.",
+        "Highlight environmental sustainability and green energy incentives.",
+        "Emphasize accessible healthcare and youth mentorship initiatives."
+    ]
+    
+    return {
+        "voter_id": voter_id,
+        "strategy": f"[DEMO MODE] {random.choice(mock_responses)}"
+    }
